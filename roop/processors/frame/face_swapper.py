@@ -83,6 +83,21 @@ def process_frames(source_path: str, temp_frame_paths: List[str], update: Callab
         if update:
             update()
 
+def multiface_process_frame(source_face, reference_face, temp_frame):
+    print("length of faces",len(source_face))
+    if roop.globals.many_faces:
+        many_faces = get_many_faces(temp_frame)
+        face= source_face[-1]
+        if many_faces:
+            for target_face in many_faces:
+                if source_face:
+                    face = source_face.pop(0)
+                temp_frame = swap_face(face, target_face, temp_frame)
+
+        return temp_frame
+    else:
+        print("Roop global many faces is false")
+
 
 def process_image(source_path: str, target_path: str, output_path: str) -> None:
     source_face = get_one_face(cv2.imread(source_path))
@@ -91,6 +106,15 @@ def process_image(source_path: str, target_path: str, output_path: str) -> None:
     result = process_frame(source_face, reference_face, target_frame)
     cv2.imwrite(output_path, result)
 
+def multi_face_swap(source_path, target_path, output_path):
+    lst_src_face = []
+    for path in source_path:
+        print(path)
+        lst_src_face.append(get_one_face(cv2.imread(path)))
+    
+    target_frame = cv2.imread(target_path)
+    result = multiface_process_frame(lst_src_face, None, target_frame)
+    cv2.imwrite(output_path, result)
 
 def process_video(source_path: str, temp_frame_paths: List[str]) -> None:
     if not roop.globals.many_faces and not get_face_reference():

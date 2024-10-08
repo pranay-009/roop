@@ -204,6 +204,30 @@ def destroy() -> None:
         clean_temp(roop.globals.target_path)
     sys.exit()
 
+def multi_image_swap(list_image_path) -> None:
+    for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
+        if not frame_processor.pre_start():
+            return
+    # process image to image
+    if has_image_extension(roop.globals.target_path):
+        if predict_image(roop.globals.target_path):
+            destroy()
+        shutil.copy2(roop.globals.target_path, roop.globals.output_path)
+        # process frame
+        for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
+            #print(frame_processor)
+            if frame_processor.NAME == 'ROOP.FACE-SWAPPER':
+                #print(True)
+                frame_processor.multi_face_swap(list_image_path, roop.globals.target_path, roop.globals.output_path)
+            else:
+                frame_processor.process_image(list_image_path,roop.globals.output_path, roop.globals.output_path)
+            frame_processor.post_process()
+        # validate image
+        if is_image(roop.globals.target_path):
+            update_status('Processing to image succeed!')
+        else:
+            update_status('Processing to image failed!')
+        return
 
 def run() -> None:
     parse_args()
