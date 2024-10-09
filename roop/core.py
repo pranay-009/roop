@@ -128,9 +128,11 @@ def update_status(message: str, scope: str = 'ROOP.CORE') -> None:
         ui.update_status(message)
 
 def single_face_swap(source_path,target_path,output_path) -> None:
+
     for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
         if not frame_processor.pre_start():
             return
+        pass
     # process image to image
     if has_image_extension(target_path):
         if predict_image(target_path):
@@ -253,6 +255,7 @@ def run(source_path,target_path,output_path) -> None:
     roop.globals.target_path = target_path
     roop.globals.source_path = source_path
     roop.globals.output_path = output_path
+    # print(roop.globals.target_path)
     if not pre_check():
         return
     for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):

@@ -3,3 +3,5 @@ models
 temp
 __pycache__
 gfpgan
+data
+*.whl
