@@ -32,7 +32,7 @@ def parse_args() -> None:
     program.add_argument('-s', '--source', help='select an source image', dest='source_path')
     program.add_argument('-t', '--target', help='select an target image or video', dest='target_path')
     program.add_argument('-o', '--output', help='select output file or directory', dest='output_path')
-    program.add_argument('--frame-processor', help='frame processors (choices: face_swapper, face_enhancer, ...)', dest='frame_processor', default=['face_swapper'], nargs='+')
+    program.add_argument('--frame-processor', help='frame processors (choices: face_swapper, face_enhancer, ...)', dest='frame_processor', default=['face_swapper','face_enhancer'], nargs='+')
     program.add_argument('--keep-fps', help='keep target fps', dest='keep_fps', action='store_true')
     program.add_argument('--keep-frames', help='keep temporary frames', dest='keep_frames', action='store_true')
     program.add_argument('--skip-audio', help='skip target audio', dest='skip_audio', action='store_true')
@@ -127,7 +127,26 @@ def update_status(message: str, scope: str = 'ROOP.CORE') -> None:
     if not roop.globals.headless:
         ui.update_status(message)
 
-
+def single_face_swap(source_path,target_path,output_path) -> None:
+    for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
+        if not frame_processor.pre_start():
+            return
+    # process image to image
+    if has_image_extension(target_path):
+        if predict_image(target_path):
+            destroy()
+        shutil.copy2(target_path, output_path)
+        # process frame
+        for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
+            update_status('Progressing...', frame_processor.NAME)
+            frame_processor.process_image(source_path, output_path, output_path)
+            frame_processor.post_process()
+        # validate image
+        if is_image(target_path):
+            update_status('Processing to image succeed!')
+        else:
+            update_status('Processing to image failed!')
+        return
 def start() -> None:
     for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
         if not frame_processor.pre_start():
@@ -229,8 +248,11 @@ def multi_image_swap(list_image_path) -> None:
             update_status('Processing to image failed!')
         return
 
-def run() -> None:
-    parse_args()
+def run(source_path,target_path,output_path) -> None:
+    # parse_args()
+    roop.globals.target_path = target_path
+    roop.globals.source_path = source_path
+    roop.globals.output_path = output_path
     if not pre_check():
         return
     for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
@@ -238,7 +260,9 @@ def run() -> None:
             return
     limit_resources()
     if roop.globals.headless:
-        start()
+        single_face_swap(source_path,target_path,output_path)
     else:
         window = ui.init(start, destroy)
         window.mainloop()
+
+
