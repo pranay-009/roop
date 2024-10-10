@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Download the ONNX model
+pip install -r requirements.txt
 wget https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx -O inswapper_128.onnx
 
 # Create a directory for models if it doesn't exist
