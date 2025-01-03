@@ -39,9 +39,13 @@ class FaceSwapper:
         return image_path
 
 
-    def swap(self,source_path,target_path,output_path):
+    def swap(self,source_path,target_path,output_path,postprocess = True):
 
-        return swap_image(source_path = source_path,target_path = target_path,output_path = output_path)
+        swap_image(source_path = source_path,target_path = target_path,output_path = output_path)
+        if postprocess:
+            self.post_processing(cv2.imread(output_path),path=output_path)
+    
+        return output_path 
 
     def super_resolution(self,image):
 
