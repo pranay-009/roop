@@ -23,6 +23,6 @@ temp_frame_quality: Optional[int] = 0
 output_video_encoder: Optional[str] = 'libx264'
 output_video_quality: Optional[int] = 0
 max_memory: Optional[int] = None
-execution_providers: List[str] = ['CPUExecutionProvider']
+execution_providers: List[str] = ['CUDAExecutionProvider']
 execution_threads: Optional[int] = suggest_execution_threads()
 log_level: str = 'error'
