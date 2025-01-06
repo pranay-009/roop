@@ -17,7 +17,7 @@ from roop.processors.frame.face_swapper import multi_face_swap as multi_face_swa
 
 class FaceSwapper:
 
-    def __init__(self,ckpt_dir='weights/RealESRGAN_x4.pth',use_sr = True,use_gfpgan = True):
+    def __init__(self,ckpt_dir:str='weights/RealESRGAN_x4.pth',use_sr:bool = True,use_gfpgan :bool= True):
         self.ckpt_dir = ckpt_dir
         self.use_sr = use_sr
 
@@ -30,16 +30,45 @@ class FaceSwapper:
             if not frame_processor.pre_check():
                 pass
 
-    def preprocessing(self,image_path):
+    def preprocessing(self,image_path:str):
         image = cv2.imread(image_path)
         h,w,c = image.shape
         if h< 512 or w<512:
             image = cv2.resize(image, (0, 0), fx=2.0, fy=2.0, interpolation=cv2.INTER_AREA)
             cv2.imwrite(image_path, image)
         return image_path
+    def add_border(self,image_path:str, border_size:int =100):
+
+        image = cv2.imread(image_path)
+        white_border_image = cv2.copyMakeBorder(
+            image,
+            top=border_size,
+            bottom=border_size,
+            left=border_size,
+            right=border_size,
+            borderType=cv2.BORDER_CONSTANT,
+            value=[255, 255, 255]
+        )
+
+        cv2.imwrite(image_path, white_border_image)
+
+    def remove_border(self,image_path:str, border_size:int = 100):
+        image = cv2.imread(image_path)
+
+        if image is None:
+            raise ValueError(f"Could not read the image from {image_path}")
+
+        height, width, _ = image.shape
+        cropped_image = image[
+            border_size:height-border_size,  # Crop top and bottom
+            border_size:width-border_size   # Crop left and right
+        ]
+
+     
+        cv2.imwrite(image_path, cropped_image)
 
 
-    def swap(self,source_path,target_path,output_path,postprocess = True):
+    def swap(self,source_path:str,target_path:str,output_path:str,postprocess:bool = True):
 
         swap_image(source_path = source_path,target_path = target_path,output_path = output_path)
         if postprocess:
@@ -52,9 +81,9 @@ class FaceSwapper:
         sr_image = self.srmodel.predict(image)
         sr_image = np.array(sr_image, dtype=np.uint8)
         return sr_image
-    def gfpgan(self,image_path, output_path):
+    def gfpgan(self,image_path:str, output_path:str):
         return process_image(source_path = image_path,target_path = image_path,output_path = output_path)
-    def save(self,image,path):
+    def save(self,image,path:str):
         cv2.imwrite(path, image)
 
     def post_processing(self,image,scale=0.5,blurr_kernel=7,path = '/content/output.png',):
