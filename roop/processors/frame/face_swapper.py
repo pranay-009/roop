@@ -15,6 +15,37 @@ FACE_SWAPPER = None
 THREAD_LOCK = threading.Lock()
 NAME = 'ROOP.FACE-SWAPPER'
 
+def add_border(image_path:str, border_size:int =100):
+
+    image = cv2.imread(image_path)
+    white_border_image = cv2.copyMakeBorder(
+        image,
+        top=border_size,
+        bottom=border_size,
+        left=border_size,
+        right=border_size,
+        borderType=cv2.BORDER_CONSTANT,
+        value=[255, 255, 255]
+    )
+
+    cv2.imwrite(image_path, white_border_image)
+
+def remove_border( image_path:str, border_size:int = 100):
+
+    image = cv2.imread(image_path)
+
+    if image is None:
+        raise ValueError(f"Could not read the image from {image_path}")
+
+    height, width, _ = image.shape
+    cropped_image = image[
+        border_size:height-border_size,  # Crop top and bottom
+        border_size:width-border_size   # Crop left and right
+    ]
+
+    
+    cv2.imwrite(image_path, cropped_image)
+
 
 def get_face_swapper() -> Any:
     global FACE_SWAPPER
@@ -59,6 +90,24 @@ def post_process() -> None:
 def swap_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame:
     return get_face_swapper().get(temp_frame, target_face, source_face, paste_back=True)
 
+def get_face(path,border):
+    try:
+        face = get_one_face(cv2.imread(path))
+        if face is None:
+            add_border(path)
+            border = True
+            face = get_one_face(cv2.imread(path))
+
+            if face is None:
+                print("No Face was Found")
+                return None, False
+            
+        
+        return face,border
+    except Exception as e:
+        print("Failed to get Face:",e)
+        return None, False
+      
 
 def process_frame(source_face: Face, reference_face: Face, temp_frame: Frame) -> Frame:
     if roop.globals.many_faces:
@@ -110,7 +159,8 @@ def multi_face_swap(source_path, target_path, output_path):
     lst_src_face = []
     for path in source_path:
         print(path)
-        lst_src_face.append(get_one_face(cv2.imread(path)))
+        face,border = get_face(path)
+        lst_src_face.append(face)
     
     target_frame = cv2.imread(target_path)
     result = multiface_process_frame(lst_src_face, None, target_frame)
