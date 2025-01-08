@@ -160,7 +160,7 @@ def multi_face_swap(source_path, target_path, output_path):
     lst_src_face = []
     for path in source_path:
         print(path)
-        face,border = get_face(path)
+        face,border = get_face(path,False)
         lst_src_face.append(face)
     
     target_frame = cv2.imread(target_path)
