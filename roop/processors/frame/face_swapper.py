@@ -101,6 +101,7 @@ def get_face(path,border):
             if face is None:
                 print("No Face was Found")
                 return None, False
+        print("Border added or not:",border)
             
         
         return face,border

@@ -26,7 +26,7 @@ class FaceSwapper:
             self.srmodel = RealESRGAN('cuda', scale=2)
             self.srmodel.load_weights(self.ckpt_dir, download=True)
         self.use_gfp = use_gfpgan
-        self.border = True
+        self.border = False
         
         for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
             if not frame_processor.pre_check():
@@ -60,21 +60,28 @@ class FaceSwapper:
 
 
     def swap(self,source_path:str,target_path:str,output_path:str,postprocess:bool = True):
-        source_face,bord1 = get_face(source_path)
-        target_face,bord2 = get_face(target_path)
+        source_face,bord1 = get_face(source_path,False)
+        target_face,bord2 = get_face(target_path,False)
         target_image = cv2.imread(target_path)
-        if bord1 == True or bord2 == True:
+        if bord2 == True:
+            print("Border was added")
             self.border = True
-        if source_face is not None or target_face is not None :
+
+        if source_face is  None or target_face is  None :
 
             raise ValueError("Source or target face not detected. Please provide valid images.") 
 
         #swap_image(source_path = source_path,target_path = target_path,output_path = output_path)
         temp_image = swap_face(source_face, target_face,target_image)
         # cv2.imwrite(output_path, temp_image)
+        if bord1:
+            remove_border(source_path)
+        elif bord2:
+            remove_border(target_path)
         if postprocess:
             #self.post_processing(cv2.imread(output_path),path=output_path)
             self.post_processing(temp_image,path=output_path)
+
         return output_path 
 
     def super_resolution(self,image):
@@ -95,6 +102,7 @@ class FaceSwapper:
         if h>2048 or w>2048:
             image = cv2.resize(image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
             scle = True
+            #print()
         blurred_image = cv2.GaussianBlur(image, (blurr_kernel, blurr_kernel), 0)
         denoised_pil = Image.fromarray(blurred_image)
         denoised_array = np.array(denoised_pil)
@@ -109,8 +117,10 @@ class FaceSwapper:
         if self.use_gfp:
             print("GFPGAN USED")
             self.gfpgan(path,path)
+
         if self.border:
-            self.remove_border(path)
+            remove_border(path)
+
 
     def multi_faceswap(self,list_image_path,target_path,output_path) -> None:
 
