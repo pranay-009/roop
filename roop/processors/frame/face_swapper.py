@@ -167,6 +167,28 @@ def multi_face_swap(source_path, target_path, output_path):
     result = multiface_process_frame(lst_src_face, None, target_frame)
     cv2.imwrite(output_path, result)
 
+def get_key_face(dictionary):
+
+    facess = {}
+
+    for indx,path in dictionary.items():
+        face,border = get_face(path,False)
+        facess[indx] =face
+
+    return facess
+        
+def multi_face_swap_v2(source_face_list, target_face_list, temp_frame):
+    
+    for indx,target_face in target_face_list.items():
+
+        if source_face_list[indx] is not None:
+            source_face = source_face_list[indx]
+            temp_frame = swap_face(source_face, target_face, temp_frame)
+
+    return temp_frame
+
+    
+
 def process_video(source_path: str, temp_frame_paths: List[str]) -> None:
     if not roop.globals.many_faces and not get_face_reference():
         reference_frame = cv2.imread(temp_frame_paths[roop.globals.reference_frame_number])

@@ -2,6 +2,7 @@ import threading
 from typing import Any, Optional, List
 import insightface
 import numpy
+import cv2
 
 import roop.globals
 from roop.typing import Frame, Face
@@ -52,3 +53,24 @@ def find_similar_face(frame: Frame, reference_face: Face) -> Optional[Face]:
                 if distance < roop.globals.similar_face_distance:
                     return face
     return None
+
+def draw_bbox(img,faces):
+    dimg = img.copy()
+    dictionary = {}
+    for i in range(len(faces)):
+        face = faces[i]
+        box = face.bbox.astype(int)
+        color = (0, 0, 255)
+        dictionary[i] = face
+        cv2.rectangle(dimg, (box[0], box[1]), (box[2], box[3]), color, 2)
+        cv2.putText(dimg,str(i), (box[0]-1, box[1]-4),cv2.FONT_HERSHEY_COMPLEX,0.7,(0,255,0),1)
+
+    return dimg,dictionary
+
+def get_faces_with_boxes(img):
+    faces = get_many_faces(img)
+    if len(faces) == 0:
+        print("No face found")
+        return img,None,None
+    draw_bbox_img,face_pairs = draw_bbox(img,faces)
+    return draw_bbox_img,faces,face_pairs
