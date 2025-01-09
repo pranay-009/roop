@@ -9,12 +9,13 @@ import roop.metadata
 from roop.processors.frame.core import get_frame_processors_modules
 from roop.core import  update_status
 from roop.utilities import is_image
-from roop.face_analyser import get_one_face
+from roop.face_analyser import get_one_face, get_faces_with_boxes
 from roop.processors.frame.face_enhancer import process_image
 from roop.processors.frame.face_swapper import process_image as swap_image
 from roop.processors.frame.face_swapper import multi_face_swap as multi_face_swap
 from roop.processors.frame.face_swapper import swap_face
-from roop.processors.frame.face_swapper import remove_border,add_border,get_face
+from roop.processors.frame.face_swapper import remove_border,add_border,get_face,multi_face_swap_v2,get_key_face
+
 
 class FaceSwapper:
 
@@ -140,3 +141,16 @@ class FaceSwapper:
             update_status('Processing to image failed!')
         return
 
+    def get_detected_box(self,image):
+        draw_bbox_img,faces,face_pairs = get_faces_with_boxes(image)
+        return draw_bbox_img,faces,face_pairs
+
+    def multi_face_swap(self,target_path,listImages,output_path):
+
+        image = cv2.imread(target_path)
+        draw_bbox_img,faces,face_pairs = self.get_detected_box(image)
+        disc = get_key_face(listImages)
+        result_image = multi_face_swap_v2(disc,face_pairs,image)
+        cv2.imwrite(output_path,result_image)
+        self.post_processing(cv2.imread(output_path),path=output_path)
+        return output_path
